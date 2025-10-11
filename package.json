@@ -1,0 +1,45 @@
+{
+  "name": "learning-tracking-model-comparison",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "echarts": "^5.5.0",
+    "element-plus": "^2.6.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "autoprefixer": "^10.4.18",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-vue": "^9.22.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "postcss": "^8.4.35",
+    "prettier": "^3.2.5",
+    "tailwindcss": "^3.4.1",
+    "terser": "^5.44.0",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.5",
+    "vue-tsc": "^2.0.6"
+  },
+  "lint-staged": {
+    "*.{vue,js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}

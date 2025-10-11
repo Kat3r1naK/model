@@ -1,0 +1,92 @@
+<template>
+  <el-dialog v-model="dialogVisible" title="添加新数据集" width="500px" @close="handleClose">
+    <el-form :model="formData" label-width="100px">
+      <el-form-item label="数据集ID">
+        <el-input v-model="formData.id" placeholder="如: physics" />
+      </el-form-item>
+      <el-form-item label="数据集名称">
+        <el-input v-model="formData.name" placeholder="如: Physics" />
+      </el-form-item>
+      <el-form-item label="描述">
+        <el-input v-model="formData.description" placeholder="如: 物理" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="handleCancel">取消</el-button>
+      <el-button type="primary" @click="handleSubmit">确定</el-button>
+    </template>
+  </el-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { ElMessage } from 'element-plus'
+import { useModelStore } from '@/stores/modelStore'
+import type { Dataset } from '@/types'
+
+const modelStore = useModelStore()
+const { showAddDatasetDialog } = storeToRefs(modelStore)
+
+// 表单数据
+const formData = ref<Dataset>({
+  id: '',
+  name: '',
+  description: '',
+})
+
+// 双向绑定弹窗显示状态
+const dialogVisible = computed({
+  get: () => showAddDatasetDialog.value,
+  set: (value: boolean) => {
+    showAddDatasetDialog.value = value
+  },
+})
+
+// 重置表单
+const resetForm = () => {
+  formData.value.id = ''
+  formData.value.name = ''
+  formData.value.description = ''
+}
+
+// 处理取消
+const handleCancel = () => {
+  dialogVisible.value = false
+  resetForm()
+}
+
+// 处理关闭
+const handleClose = () => {
+  resetForm()
+}
+
+// 处理提交
+const handleSubmit = () => {
+  // 验证
+  if (!formData.value.id || !formData.value.name) {
+    ElMessage.error('请填写完整的数据集信息')
+    return
+  }
+
+  try {
+    modelStore.addDataset(formData.value)
+    ElMessage.success(`成功添加数据集: ${formData.value.name}`)
+    dialogVisible.value = false
+    resetForm()
+  } catch (error) {
+    ElMessage.error((error as Error).message)
+  }
+}
+
+// 监听弹窗打开，重置表单
+watch(showAddDatasetDialog, (newVal) => {
+  if (newVal) {
+    resetForm()
+  }
+})
+</script>
+
+<style scoped>
+/* 如需自定义样式可在此添加 */
+</style>

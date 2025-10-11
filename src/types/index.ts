@@ -1,0 +1,59 @@
+// 模型参数定义
+export interface ModelParameter {
+  key: string
+  label: string
+  min: number
+  max: number
+  step: number
+  default: number
+  description: string
+}
+
+// 模型类型
+export interface Model {
+  id: string
+  name: string
+  fullName: string
+  description: string
+  color: string
+  parameters: ModelParameter[]
+}
+
+// 模型参数值
+export interface ModelParameterValues {
+  [modelId: string]: {
+    [paramKey: string]: number
+  }
+}
+
+// 数据集类型
+export interface Dataset {
+  id: string
+  name: string
+  description: string
+}
+
+// 结果数据点
+export interface DataPoint {
+  step: number
+  accuracy: number
+}
+
+// 模型运行结果
+export interface ModelResult {
+  modelId: string
+  modelName: string
+  datasetId: string
+  datasetName: string
+  data: DataPoint[]
+  color: string
+}
+
+// 比较结果
+export interface ComparisonResult {
+  id: string
+  timestamp: number
+  models: string[]
+  dataset: string
+  results: ModelResult[]
+}
