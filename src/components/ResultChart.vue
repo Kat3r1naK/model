@@ -50,7 +50,7 @@ import { storeToRefs } from 'pinia'
 import * as echarts from 'echarts'
 import type { ECharts } from 'echarts'
 import { ElMessage } from 'element-plus'
-import { Download, ArrowDown, Picture, PictureFilled, Document } from '@element-plus/icons-vue'
+import { Download, ArrowDown, Picture, Document } from '@element-plus/icons-vue'
 import { useModelStore } from '@/stores/modelStore'
 
 const modelStore = useModelStore()
