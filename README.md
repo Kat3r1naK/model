@@ -226,8 +226,11 @@ pnpm format
 ### 4. TypeScript 类型检查
 
 ```bash
-# 检查类型错误（构建时会自动检查）
-pnpm build
+# 仅进行类型检查，不构建
+pnpm tsc
+
+# 类型检查 + 构建（用于CI/CD）
+pnpm build:check
 ```
 
 ### 5. 预览生产版本
@@ -238,6 +241,104 @@ pnpm build
 
 # 预览构建结果
 pnpm preview
+```
+
+## 生产构建与部署
+
+### 构建配置优化
+
+本项目针对 CI/CD 环境进行了构建优化：
+
+1. **快速构建**
+   - 使用 `esbuild` 替代 `terser` 进行代码压缩（速度提升约 20-40 倍）
+   - 关闭不必要的构建输出（`reportCompressedSize: false`）
+   - 智能代码分割，减少单个文件大小
+
+2. **构建命令**
+   ```bash
+   # 快速构建（推荐用于 Jenkins/CI）
+   pnpm build
+   
+   # 带类型检查的构建（推荐用于本地开发）
+   pnpm build:check
+   ```
+
+3. **性能优化**
+   - 自动移除 `console` 和 `debugger` 语句
+   - 按库分包：Vue、ECharts、Element Plus 分别打包
+   - 使用 `esnext` 目标，生成更小的代码
+
+### Jenkins CI/CD 配置
+
+如果您在 Jenkins 上构建，请使用以下配置：
+
+```groovy
+pipeline {
+  agent any
+  
+  stages {
+    stage('Install') {
+      steps {
+        sh 'pnpm install --frozen-lockfile'
+      }
+    }
+    
+    stage('Lint') {
+      steps {
+        sh 'pnpm lint'
+      }
+    }
+    
+    stage('Build') {
+      steps {
+        // 使用快速构建，不进行类型检查
+        sh 'pnpm build'
+      }
+    }
+    
+    stage('Deploy') {
+      steps {
+        // 部署 dist/ 目录
+        sh 'your-deploy-command'
+      }
+    }
+  }
+}
+```
+
+### 构建产物
+
+构建后的文件位于 `dist/` 目录：
+
+```
+dist/
+├── index.html           # 入口页面
+├── assets/
+│   ├── js/
+│   │   ├── vue-vendor-[hash].js      # Vue + Pinia
+│   │   ├── echarts-[hash].js         # ECharts
+│   │   ├── element-plus-[hash].js    # Element Plus
+│   │   └── index-[hash].js           # 应用代码
+│   └── css/
+│       └── index-[hash].css          # 样式文件
+├── favicon.ico
+└── manifest.json
+```
+
+### 部署到生产环境
+
+```bash
+# 构建生产版本
+pnpm build
+
+# 部署到静态服务器（例如 Nginx）
+# 将 dist/ 目录复制到服务器
+scp -r dist/ user@server:/var/www/html/
+
+# 或使用其他部署工具
+# - Vercel: vercel --prod
+# - Netlify: netlify deploy --prod
+# - GitHub Pages: gh-pages -d dist
 ```
 
 ## 项目结构

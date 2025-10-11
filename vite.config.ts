@@ -14,6 +14,11 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  // esbuild 配置（用于开发和生产环境）
+  esbuild: {
+    // 生产环境移除 console 和 debugger
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
   build: {
     // 设置代码分割的大小阈值（单位：KB），提高阈值以适应大型 UI 库
     chunkSizeWarningLimit: 1500,
@@ -34,14 +39,11 @@ export default defineConfig({
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
-    // 启用源码压缩
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        // 生产环境移除 console
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    // 使用 esbuild 压缩，比 terser 快很多，资源消耗更少
+    minify: 'esbuild',
+    // 优化构建性能
+    target: 'esnext',
+    // 减少不必要的构建输出
+    reportCompressedSize: false,
   },
 })
