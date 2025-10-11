@@ -1,14 +1,14 @@
 <template>
   <el-dialog v-model="dialogVisible" title="添加新数据集" :width="dialogWidth" @close="handleClose">
-    <el-form :model="formData" :label-width="labelWidth">
+    <el-form :model="formData" :label-width="labelWidth" class="compact-form">
       <el-form-item label="数据集ID">
-        <el-input v-model="formData.id" placeholder="如: physics" />
+        <el-input v-model="formData.id" placeholder="如: physics" size="small" />
       </el-form-item>
       <el-form-item label="数据集名称">
-        <el-input v-model="formData.name" placeholder="如: Physics" />
+        <el-input v-model="formData.name" placeholder="如: Physics" size="small" />
       </el-form-item>
       <el-form-item label="描述">
-        <el-input v-model="formData.description" placeholder="如: 物理" />
+        <el-input v-model="formData.description" placeholder="如: 物理" size="small" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -36,7 +36,9 @@ const dialogWidth = computed(() => {
   return '500px'
 })
 const labelWidth = computed(() => {
-  return windowWidth.value < 640 ? '70px' : '100px'
+  if (windowWidth.value < 640) return '80px'
+  if (windowWidth.value < 768) return '90px'
+  return '110px'
 })
 
 const handleResize = () => {
@@ -111,5 +113,23 @@ watch(showAddDatasetDialog, (newVal) => {
 </script>
 
 <style scoped>
-/* 如需自定义样式可在此添加 */
+.compact-form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+
+.compact-form :deep(.el-form-item__label) {
+  font-size: 14px;
+  padding-right: 8px;
+}
+
+/* 移动端优化 */
+@media (max-width: 640px) {
+  .compact-form :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  .compact-form :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+}
 </style>
