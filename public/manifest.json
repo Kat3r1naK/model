@@ -1,0 +1,21 @@
+{
+  "name": "学习追踪模型对比系统",
+  "short_name": "模型对比",
+  "description": "支持多种学习曲线模型的对比分析工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
