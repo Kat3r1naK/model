@@ -255,10 +255,11 @@ pnpm preview
    - 智能代码分割，减少单个文件大小
 
 2. **构建命令**
+
    ```bash
    # 快速构建（推荐用于 Jenkins/CI）
    pnpm build
-   
+
    # 带类型检查的构建（推荐用于本地开发）
    pnpm build:check
    ```
@@ -275,27 +276,27 @@ pnpm preview
 ```groovy
 pipeline {
   agent any
-  
+
   stages {
     stage('Install') {
       steps {
         sh 'pnpm install --frozen-lockfile'
       }
     }
-    
+
     stage('Lint') {
       steps {
         sh 'pnpm lint'
       }
     }
-    
+
     stage('Build') {
       steps {
         // 使用快速构建，不进行类型检查
         sh 'pnpm build'
       }
     }
-    
+
     stage('Deploy') {
       steps {
         // 部署 dist/ 目录
@@ -327,6 +328,8 @@ dist/
 
 ### 部署到生产环境
 
+#### 方案一：标准部署（推荐）
+
 ```bash
 # 构建生产版本
 pnpm build
@@ -340,6 +343,61 @@ scp -r dist/ user@server:/var/www/html/
 # - Netlify: netlify deploy --prod
 # - GitHub Pages: gh-pages -d dist
 ```
+
+#### 方案二：小服务器部署（2核2G 1M带宽）⚠️
+
+**重要提示：强烈建议在本地或CI服务器构建，不要在小服务器上构建！**
+
+使用项目提供的部署脚本：
+
+```bash
+# 1. 在本地执行构建脚本
+./deploy.sh
+
+# 2. 按照提示上传 dist.tar.gz 到服务器
+scp dist.tar.gz user@server:/var/www/html/
+
+# 3. SSH 到服务器解压
+ssh user@server
+cd /var/www/html
+tar -xzf dist.tar.gz
+rm dist.tar.gz
+
+# 4. 配置 Nginx（首次部署）
+sudo cp model/nginx.conf.example /etc/nginx/sites-available/model
+# 编辑配置文件，修改 server_name
+sudo nano /etc/nginx/sites-available/model
+# 启用站点
+sudo ln -s /etc/nginx/sites-available/model /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+**如果必须在服务器上构建：**
+
+```bash
+# 1. 先增加 swap（至少 4GB）
+sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# 2. 使用低内存模式构建
+cd /var/www/html/model
+pnpm install --frozen-lockfile --prefer-offline
+pnpm build:low-memory
+
+# 3. 构建完成后清理（释放空间）
+rm -rf node_modules
+pnpm store prune
+```
+
+**详细的小服务器优化指南，请查看：**
+
+- 📖 `SERVER_OPTIMIZATION.md` - 完整的优化方案和故障排查
+- ⚙️ `nginx.conf.example` - 优化的 Nginx 配置
+- 🚀 `deploy.sh` - 自动化部署脚本
 
 ## 项目结构
 
