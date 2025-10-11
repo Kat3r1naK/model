@@ -5,7 +5,7 @@
       <el-button size="small" type="primary" @click="openAddModelDialog">
         <el-icon class="mr-1"><Plus /></el-icon>
         <span class="hidden sm:inline">添加模型</span>
-        <span class="sm:hidden">添加</span>
+        <span class="sm:hidden">添加 </span>
       </el-button>
     </div>
     <el-checkbox-group v-model="localSelectedModels" class="flex flex-col gap-3">
