@@ -18,26 +18,99 @@
             >
           </div>
         </el-radio>
-        <button @click.stop="handleDeleteDataset(dataset.id)" class="delete-btn" title="删除数据集">
-          <el-icon><Close /></el-icon>
-        </button>
+        <div class="dataset-actions">
+          <button class="info-btn" title="查看数据集说明" @click.stop="showDatasetInfo(dataset)">
+            <el-icon><InfoFilled /></el-icon>
+          </button>
+          <button
+            class="delete-btn"
+            title="删除数据集"
+            @click.stop="handleDeleteDataset(dataset.id)"
+          >
+            <el-icon><Close /></el-icon>
+          </button>
+        </div>
       </div>
     </el-radio-group>
     <p class="text-sm text-gray-400 mt-4">请选择一个数据集后运行</p>
+
+    <!-- 数据集信息对话框 -->
+    <el-dialog
+      v-model="showInfoDialog"
+      title="数据集详细信息"
+      width="600px"
+      append-to-body
+      center
+      :modal="true"
+      :close-on-click-modal="true"
+      :close-on-press-escape="true"
+    >
+      <div v-if="currentDatasetInfo" class="dataset-info-content">
+        <div class="info-item">
+          <label class="info-label">数据集名称：</label>
+          <span class="info-value">{{ currentDatasetInfo.name }}</span>
+        </div>
+        <div class="info-item">
+          <label class="info-label">简短描述：</label>
+          <span class="info-value">{{ currentDatasetInfo.description }}</span>
+        </div>
+        <div v-if="currentDatasetInfo.fullDescription" class="info-item">
+          <label class="info-label">详细描述：</label>
+          <p class="info-value">{{ currentDatasetInfo.fullDescription }}</p>
+        </div>
+        <div v-if="currentDatasetInfo.source" class="info-item">
+          <label class="info-label">数据来源：</label>
+          <span class="info-value">{{ currentDatasetInfo.source }}</span>
+        </div>
+        <div v-if="currentDatasetInfo.domain" class="info-item">
+          <label class="info-label">应用领域：</label>
+          <span class="info-value">{{ currentDatasetInfo.domain }}</span>
+        </div>
+        <div v-if="currentDatasetInfo.sampleCount" class="info-item">
+          <label class="info-label">样本数量：</label>
+          <span class="info-value">{{ currentDatasetInfo.sampleCount?.toLocaleString() }} 条</span>
+        </div>
+        <div v-if="currentDatasetInfo.year" class="info-item">
+          <label class="info-label">数据年份：</label>
+          <span class="info-value">{{ currentDatasetInfo.year }}</span>
+        </div>
+        <div
+          v-if="currentDatasetInfo.features && currentDatasetInfo.features.length > 0"
+          class="info-item"
+        >
+          <label class="info-label">数据特征：</label>
+          <div class="features-list">
+            <span v-for="feature in currentDatasetInfo.features" :key="feature" class="feature-tag">
+              {{ feature }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCloseInfoDialog">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Close } from '@element-plus/icons-vue'
+import { Plus, Close, InfoFilled } from '@element-plus/icons-vue'
 import { useModelStore } from '@/stores/modelStore'
+import type { Dataset } from '@/types'
 
 const modelStore = useModelStore()
 const { availableDatasets, selectedDataset } = storeToRefs(modelStore)
 
 const datasets = computed(() => availableDatasets.value)
+
+// 数据集信息弹出对话框相关
+const showInfoDialog = ref(false)
+const currentDatasetInfo = ref<Dataset | null>(null)
 
 const localSelectedDataset = computed({
   get: () => selectedDataset.value,
@@ -49,6 +122,18 @@ const localSelectedDataset = computed({
 // 打开添加数据集对话框
 const openAddDatasetDialog = () => {
   modelStore.showAddDatasetDialog = true
+}
+
+// 显示数据集信息
+const showDatasetInfo = (dataset: Dataset) => {
+  currentDatasetInfo.value = dataset
+  showInfoDialog.value = true
+}
+
+// 关闭数据集信息对话框
+const handleCloseInfoDialog = () => {
+  showInfoDialog.value = false
+  currentDatasetInfo.value = null
 }
 
 // 处理删除数据集
@@ -194,5 +279,90 @@ const handleDeleteDataset = (datasetId: string) => {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
   color: #fee2e2;
+}
+
+/* 数据集操作按钮组 */
+.dataset-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 信息按钮 */
+.info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.info-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
+/* 数据集信息对话框内容 */
+.dataset-info-content {
+  padding: 1rem 0;
+}
+
+.info-item {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.info-value {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* 特征标签列表 */
+.features-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.feature-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 4px;
+  color: #3b82f6;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .dataset-actions {
+    gap: 0.375rem;
+  }
+
+  .info-btn,
+  .delete-btn {
+    padding: 0.375rem;
+  }
 }
 </style>

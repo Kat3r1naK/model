@@ -19,13 +19,16 @@
             </div>
           </el-checkbox>
           <div class="model-actions">
-            <button @click.stop="handleDeleteModel(model.id)" class="delete-btn" title="删除模型">
+            <button class="info-btn" title="查看模型说明" @click.stop="showModelInfo(model)">
+              <el-icon><InfoFilled /></el-icon>
+            </button>
+            <button class="delete-btn" title="删除模型" @click.stop="handleDeleteModel(model.id)">
               <el-icon><Close /></el-icon>
             </button>
             <button
-              @click.stop="toggleParameters(model.id)"
               class="expand-btn"
               :class="{ expanded: expandedModels.includes(model.id) }"
+              @click.stop="toggleParameters(model.id)"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -49,7 +52,7 @@
           <div v-if="expandedModels.includes(model.id)" class="model-parameters mt-3 ml-8">
             <div class="text-sm text-gray-300 mb-2 flex items-center justify-between">
               <span>参数设置</span>
-              <el-button size="small" text @click="resetParameters(model.id)" class="reset-btn">
+              <el-button size="small" text class="reset-btn" @click="resetParameters(model.id)">
                 重置
               </el-button>
             </div>
@@ -62,11 +65,11 @@
               </div>
               <el-slider
                 :model-value="getParameterValue(model.id, param.key)"
-                @update:model-value="(val: number) => updateParameter(model.id, param.key, val)"
                 :min="param.min"
                 :max="param.max"
                 :step="param.step"
                 :show-tooltip="false"
+                @update:model-value="(val: number) => updateParameter(model.id, param.key, val)"
               />
               <div class="param-description">{{ param.description }}</div>
             </div>
@@ -74,7 +77,52 @@
         </el-collapse-transition>
       </div>
     </el-checkbox-group>
-    <p class="text-sm text-gray-400 mt-4">可同时勾选多个模型进行对比，并调节各模型参数</p>
+
+    <!-- 模型信息弹出对话框 -->
+    <el-dialog
+      v-model="showInfoDialog"
+      :title="`模型说明 - ${currentModelInfo?.name || ''}`"
+      width="500px"
+      :before-close="handleCloseInfoDialog"
+      append-to-body
+      center
+      :modal="true"
+      :close-on-click-modal="true"
+      :close-on-press-escape="true"
+    >
+      <div v-if="currentModelInfo" class="model-info-content">
+        <div class="info-item">
+          <label class="info-label">模型名称：</label>
+          <span class="info-value">{{ currentModelInfo.name }}</span>
+        </div>
+        <div class="info-item">
+          <label class="info-label">完整名称：</label>
+          <span class="info-value">{{ currentModelInfo.fullName }}</span>
+        </div>
+        <div class="info-item">
+          <label class="info-label">模型描述：</label>
+          <span class="info-value">{{ currentModelInfo.description }}</span>
+        </div>
+        <div
+          v-if="currentModelInfo.parameters && currentModelInfo.parameters.length > 0"
+          class="info-item"
+        >
+          <label class="info-label">可调参数：</label>
+          <div class="parameters-list">
+            <div v-for="param in currentModelInfo.parameters" :key="param.key" class="param-info">
+              <span class="param-name">{{ param.label }}</span>
+              <span class="param-range">({{ param.min }} - {{ param.max }})</span>
+              <p class="param-desc">{{ param.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCloseInfoDialog">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -82,7 +130,7 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Close } from '@element-plus/icons-vue'
+import { Plus, Close, InfoFilled } from '@element-plus/icons-vue'
 import { useModelStore } from '@/stores/modelStore'
 
 const modelStore = useModelStore()
@@ -92,6 +140,10 @@ const models = computed(() => availableModels.value)
 
 // 展开的模型列表
 const expandedModels = ref<string[]>([])
+
+// 模型信息弹出对话框相关
+const showInfoDialog = ref(false)
+const currentModelInfo = ref<any>(null)
 
 const localSelectedModels = computed({
   get: () => selectedModels.value,
@@ -130,6 +182,18 @@ const resetParameters = (modelId: string) => {
 // 打开添加模型对话框
 const openAddModelDialog = () => {
   modelStore.showAddModelDialog = true
+}
+
+// 显示模型信息
+const showModelInfo = (model: any) => {
+  currentModelInfo.value = model
+  showInfoDialog.value = true
+}
+
+// 关闭模型信息对话框
+const handleCloseInfoDialog = () => {
+  showInfoDialog.value = false
+  currentModelInfo.value = null
 }
 
 // 处理删除模型
@@ -330,6 +394,25 @@ watch(
   transform: rotate(180deg);
 }
 
+.info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.info-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
 .delete-btn {
   display: flex;
   align-items: center;
@@ -413,5 +496,67 @@ watch(
 
 .reset-btn:hover {
   color: #3b82f6;
+}
+
+/* 模型信息对话框样式 */
+.model-info-content {
+  padding: 1rem 0;
+}
+
+.info-item {
+  margin-bottom: 1rem;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 0.5rem;
+  display: inline-block;
+  min-width: 80px;
+}
+
+.info-value {
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.parameters-list {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+}
+
+.param-info {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.param-info:last-child {
+  margin-bottom: 0;
+}
+
+.param-name {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 0.5rem;
+}
+
+.param-range {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.param-desc {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
 }
 </style>

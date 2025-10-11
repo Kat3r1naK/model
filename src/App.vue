@@ -61,7 +61,8 @@
       <!-- 添加数据集对话框 -->
       <AddDatasetDialog />
 
-      <!-- 模型说明 -->
+      <!-- 模型说明 - 已禁用 -->
+      <!-- 
       <div
         class="mt-6 md:mt-8 p-4 md:p-6 bg-slate-800 bg-opacity-50 rounded-lg border border-slate-600"
       >
@@ -87,6 +88,7 @@
           </div>
         </div>
       </div>
+      -->
     </div>
   </div>
 </template>

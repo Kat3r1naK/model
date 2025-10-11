@@ -31,6 +31,12 @@ export interface Dataset {
   id: string
   name: string
   description: string
+  fullDescription?: string // 详细描述
+  source?: string // 数据来源
+  sampleCount?: number // 样本数量
+  features?: string[] // 特征列表
+  domain?: string // 领域
+  year?: number // 年份
 }
 
 // 结果数据点

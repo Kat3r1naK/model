@@ -128,16 +128,37 @@ export const useModelStore = defineStore('model', () => {
       id: 'algebra1',
       name: 'Algebra I',
       description: '代数一',
+      fullDescription:
+        '这是一个包含代数一课程学习数据的数据集，记录了学生在代数基础概念学习过程中的表现。',
+      source: 'Carnegie Learning DataShop',
+      sampleCount: 15000,
+      features: ['学生ID', '题目ID', '答题时间', '正确性', '技能标签'],
+      domain: '数学教育',
+      year: 2019,
     },
     {
       id: 'geometry',
       name: 'Geometry',
       description: '几何',
+      fullDescription:
+        '几何学习数据集，包含学生在几何概念和定理学习中的详细记录，涵盖平面几何和立体几何。',
+      source: 'ASSISTments Platform',
+      sampleCount: 12500,
+      features: ['学生ID', '题目类型', '解题步骤', '错误类型', '几何概念'],
+      domain: '数学教育',
+      year: 2020,
     },
     {
       id: 'programming101',
       name: 'Programming 101',
       description: '编程入门',
+      fullDescription:
+        '编程入门课程数据集，记录了初学者在学习基础编程概念时的学习轨迹和编程练习表现。',
+      source: 'CodeLab Educational Platform',
+      sampleCount: 8900,
+      features: ['学生ID', '编程题目', '代码提交', '编译错误', '运行结果', '编程概念'],
+      domain: '计算机科学教育',
+      year: 2021,
     },
   ])
 
