@@ -1,6 +1,6 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="添加新模型" width="600px" @close="handleClose">
-    <el-form :model="formData" label-width="100px">
+  <el-dialog v-model="dialogVisible" title="添加新模型" :width="dialogWidth" @close="handleClose">
+    <el-form :model="formData" :label-width="labelWidth">
       <el-form-item label="模型ID">
         <el-input v-model="formData.id" placeholder="如: dkt" />
       </el-form-item>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { useModelStore } from '@/stores/modelStore'
@@ -33,6 +33,29 @@ import type { Model } from '@/types'
 
 const modelStore = useModelStore()
 const { showAddModelDialog } = storeToRefs(modelStore)
+
+// 响应式窗口宽度
+const windowWidth = ref(window.innerWidth)
+const dialogWidth = computed(() => {
+  if (windowWidth.value < 640) return '90%'
+  if (windowWidth.value < 768) return '80%'
+  return '600px'
+})
+const labelWidth = computed(() => {
+  return windowWidth.value < 640 ? '70px' : '100px'
+})
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 // 表单数据
 const formData = ref({

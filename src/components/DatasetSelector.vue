@@ -1,18 +1,21 @@
 <template>
   <div class="dataset-selector">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-white text-lg font-semibold">数据集选择</h3>
+      <h3 class="text-white text-base md:text-lg font-semibold">数据集选择</h3>
       <el-button size="small" type="primary" @click="openAddDatasetDialog">
         <el-icon class="mr-1"><Plus /></el-icon>
-        添加数据集
+        <span class="hidden sm:inline">添加数据集</span>
+        <span class="sm:hidden">添加</span>
       </el-button>
     </div>
     <el-radio-group v-model="localSelectedDataset" class="flex flex-col gap-3">
       <div v-for="dataset in datasets" :key="dataset.id" class="dataset-item">
         <el-radio :label="dataset.id" :value="dataset.id" class="dataset-radio">
-          <div class="flex items-center gap-2">
-            <span class="font-semibold text-white">{{ dataset.name }}</span>
-            <span class="text-sm text-gray-400">({{ dataset.description }})</span>
+          <div class="dataset-info">
+            <span class="dataset-name" :title="dataset.name">{{ dataset.name }}</span>
+            <span class="dataset-desc" :title="dataset.description"
+              >({{ dataset.description }})</span
+            >
           </div>
         </el-radio>
         <button @click.stop="handleDeleteDataset(dataset.id)" class="delete-btn" title="删除数据集">
@@ -70,11 +73,17 @@ const handleDeleteDataset = (datasetId: string) => {
 
 <style scoped>
 .dataset-selector {
-  padding: 1.5rem;
+  padding: 1rem;
   background: rgba(30, 41, 59, 0.6);
   border-radius: 12px;
   border: 1px solid rgba(71, 85, 105, 0.5);
   backdrop-filter: blur(10px);
+}
+
+@media (min-width: 768px) {
+  .dataset-selector {
+    padding: 1.5rem;
+  }
 }
 
 .dataset-item {
@@ -83,6 +92,7 @@ const handleDeleteDataset = (datasetId: string) => {
   justify-content: space-between;
   gap: 0.5rem;
   width: 100%;
+  min-width: 0; /* 允许 flex 子元素收缩 */
 }
 
 :deep(.el-radio) {
@@ -90,10 +100,66 @@ const handleDeleteDataset = (datasetId: string) => {
   height: auto;
   margin-right: 0;
   flex: 1;
+  min-width: 0; /* 允许 flex 子元素收缩 */
 }
 
 :deep(.el-radio__label) {
   width: 100%;
+  min-width: 0; /* 允许 flex 子元素收缩 */
+}
+
+/* 数据集信息容器 */
+.dataset-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0; /* 允许 flex 子元素收缩 */
+}
+
+/* 数据集名称 */
+.dataset-name {
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 10rem;
+  flex-shrink: 0;
+}
+
+/* 数据集描述 */
+.dataset-desc {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .dataset-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .dataset-name,
+  .dataset-desc {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .dataset-name {
+    font-size: 0.875rem;
+  }
+
+  .delete-btn {
+    padding: 0.375rem;
+  }
 }
 
 :deep(.el-radio__input.is-checked .el-radio__inner) {

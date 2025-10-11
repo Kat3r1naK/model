@@ -1,23 +1,24 @@
 <template>
   <div class="model-selector">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-white text-lg font-semibold">模型选择</h3>
+      <h3 class="text-white text-base md:text-lg font-semibold">模型选择</h3>
       <el-button size="small" type="primary" @click="openAddModelDialog">
         <el-icon class="mr-1"><Plus /></el-icon>
-        添加模型
+        <span class="hidden sm:inline">添加模型</span>
+        <span class="sm:hidden">添加</span>
       </el-button>
     </div>
     <el-checkbox-group v-model="localSelectedModels" class="flex flex-col gap-3">
       <div v-for="model in models" :key="model.id" class="model-item">
         <div class="model-header">
           <el-checkbox :label="model.id" :value="model.id" class="model-checkbox">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-white">{{ model.name }}</span>
-              <span class="text-sm text-gray-400">{{ model.fullName }}</span>
-              <span class="text-xs text-gray-500">({{ model.description }})</span>
+            <div class="model-info">
+              <span class="model-name" :title="model.name">{{ model.name }}</span>
+              <span class="model-fullname" :title="model.fullName">{{ model.fullName }}</span>
+              <span class="model-desc" :title="model.description">({{ model.description }})</span>
             </div>
           </el-checkbox>
-          <div class="flex items-center gap-2">
+          <div class="model-actions">
             <button @click.stop="handleDeleteModel(model.id)" class="delete-btn" title="删除模型">
               <el-icon><Close /></el-icon>
             </button>
@@ -169,11 +170,17 @@ watch(
 
 <style scoped>
 .model-selector {
-  padding: 1.5rem;
+  padding: 1rem;
   background: rgba(30, 41, 59, 0.6);
   border-radius: 12px;
   border: 1px solid rgba(71, 85, 105, 0.5);
   backdrop-filter: blur(10px);
+}
+
+@media (min-width: 768px) {
+  .model-selector {
+    padding: 1.5rem;
+  }
 }
 
 .model-item {
@@ -185,6 +192,8 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  width: 100%;
+  min-width: 0; /* 允许 flex 子元素收缩 */
 }
 
 :deep(.el-checkbox) {
@@ -192,10 +201,91 @@ watch(
   height: auto;
   margin-right: 0;
   flex: 1;
+  min-width: 0; /* 允许 flex 子元素收缩 */
 }
 
 :deep(.el-checkbox__label) {
   width: 100%;
+  min-width: 0; /* 允许 flex 子元素收缩 */
+}
+
+/* 模型信息容器 */
+.model-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0; /* 允许 flex 子元素收缩 */
+}
+
+/* 模型名称 - 主要信息，不换行 */
+.model-name {
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 8rem;
+  flex-shrink: 0;
+}
+
+/* 模型全称 - 次要信息 */
+.model-fullname {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 模型描述 - 辅助信息 */
+.model-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 按钮操作区 */
+.model-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .model-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .model-name,
+  .model-fullname,
+  .model-desc {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .model-name {
+    font-size: 0.875rem;
+  }
+
+  .model-actions {
+    gap: 0.25rem;
+  }
+
+  .expand-btn,
+  .delete-btn {
+    padding: 0.375rem;
+  }
 }
 
 :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {

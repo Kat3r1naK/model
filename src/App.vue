@@ -1,10 +1,10 @@
 <template>
-  <div id="app" class="min-h-screen py-8 px-4">
+  <div id="app" class="min-h-screen py-4 md:py-8 px-3 md:px-4">
     <div class="max-w-7xl mx-auto">
       <!-- 标题 -->
-      <header class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-white mb-2">学习追踪模型对比系统</h1>
-        <p class="text-gray-400 text-lg">勾选模型与数据集，一键生成图像并进行对比</p>
+      <header class="text-center mb-6 md:mb-8">
+        <h1 class="text-2xl md:text-4xl font-bold text-white mb-2">学习追踪模型对比系统</h1>
+        <p class="text-gray-400 text-sm md:text-lg">勾选模型与数据集，一键生成图像并进行对比</p>
       </header>
 
       <!-- 选择区域 -->
@@ -14,25 +14,30 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="flex items-center justify-center gap-4 mb-6">
+      <div class="flex items-center justify-center gap-2 md:gap-4 mb-6">
         <el-button
           type="primary"
-          size="large"
+          :size="isMobile ? 'default' : 'large'"
           :disabled="!canRun || isRunning"
           :loading="isRunning"
           @click="handleRunComparison"
-          class="px-8"
+          class="flex-1 md:flex-initial md:px-8"
         >
-          <el-icon class="mr-2">
+          <el-icon class="mr-1 md:mr-2">
             <Operation />
           </el-icon>
-          {{ isRunning ? '运行中...' : '运行对比' }}
+          <span class="text-sm md:text-base">{{ isRunning ? '运行中...' : '运行对比' }}</span>
         </el-button>
-        <el-button size="large" :disabled="!hasResults" @click="handleClearResults" class="px-8">
-          <el-icon class="mr-2">
+        <el-button
+          :size="isMobile ? 'default' : 'large'"
+          :disabled="!hasResults"
+          @click="handleClearResults"
+          class="flex-1 md:flex-initial md:px-8"
+        >
+          <el-icon class="mr-1 md:mr-2">
             <Delete />
           </el-icon>
-          清空结果
+          <span class="text-sm md:text-base">清空结果</span>
         </el-button>
       </div>
 
@@ -57,9 +62,11 @@
       <AddDatasetDialog />
 
       <!-- 模型说明 -->
-      <div class="mt-8 p-6 bg-slate-800 bg-opacity-50 rounded-lg border border-slate-600">
-        <h3 class="text-white text-lg font-semibold mb-4">📚 模型说明</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div
+        class="mt-6 md:mt-8 p-4 md:p-6 bg-slate-800 bg-opacity-50 rounded-lg border border-slate-600"
+      >
+        <h3 class="text-white text-base md:text-lg font-semibold mb-3 md:mb-4">📚 模型说明</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           <div class="p-4 bg-slate-700 bg-opacity-30 rounded-lg">
             <h4 class="text-blue-400 font-semibold mb-2">BKT (贝叶斯知识追踪)</h4>
             <p class="text-gray-300 text-sm">
@@ -85,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
 import { Operation, Delete } from '@element-plus/icons-vue'
@@ -109,6 +116,22 @@ const {
 } = storeToRefs(modelStore)
 
 const hasResults = computed(() => currentResult.value !== null)
+
+// 检测移动端
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 const handleRunComparison = async () => {
   const modelNames = selectedModels.value
