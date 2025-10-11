@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto">
       <!-- 标题 -->
       <header class="text-center mb-6 md:mb-8">
-        <h1 class="text-2xl md:text-4xl font-bold text-white mb-2">学习追踪模型对比系统</h1>
+        <h1 class="text-2xl md:text-4xl font-bold text-white mb-2">学习追踪模型系统</h1>
         <p class="text-gray-400 text-sm md:text-lg">勾选模型与数据集，一键生成图像并进行对比</p>
       </header>
 
@@ -20,8 +20,8 @@
           :size="isMobile ? 'default' : 'large'"
           :disabled="!canRun || isRunning"
           :loading="isRunning"
-          @click="handleRunComparison"
           class="flex-1 md:flex-initial md:px-8"
+          @click="handleRunComparison"
         >
           <el-icon class="mr-1 md:mr-2">
             <Operation />
@@ -31,8 +31,8 @@
         <el-button
           :size="isMobile ? 'default' : 'large'"
           :disabled="!hasResults"
-          @click="handleClearResults"
           class="flex-1 md:flex-initial md:px-8"
+          @click="handleClearResults"
         >
           <el-icon class="mr-1 md:mr-2">
             <Delete />
