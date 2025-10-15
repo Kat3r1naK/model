@@ -45,12 +45,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { storeToRefs } from 'pinia'
+import { ArrowDown, Document, Download, Picture } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import type { ECharts } from 'echarts'
 import { ElMessage } from 'element-plus'
-import { Download, ArrowDown, Picture, Document } from '@element-plus/icons-vue'
+import { storeToRefs } from 'pinia'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
 import { useModelStore } from '@/stores/modelStore'
 
 const modelStore = useModelStore()
