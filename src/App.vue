@@ -13,6 +13,16 @@
         <DatasetSelector />
       </div>
 
+      <!-- 错误提示 -->
+      <div v-if="error" class="text-center mb-6">
+        <el-alert :title="error" type="error" center :closable="false" show-icon />
+      </div>
+
+      <!-- 加载提示 -->
+      <div v-if="isLoading" class="text-center mb-6">
+        <el-alert title="正在加载数据..." type="info" center :closable="false" show-icon />
+      </div>
+
       <!-- 操作按钮 -->
       <div class="flex items-center justify-center gap-2 md:gap-4 mb-6">
         <el-button
@@ -62,7 +72,7 @@
       <AddDatasetDialog />
 
       <!-- 模型说明 - 已禁用 -->
-      <!-- 
+      <!--
       <div
         class="mt-6 md:mt-8 p-4 md:p-6 bg-slate-800 bg-opacity-50 rounded-lg border border-slate-600"
       >
@@ -94,17 +104,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { storeToRefs } from 'pinia'
+import { Delete, Operation } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { Operation, Delete } from '@element-plus/icons-vue'
-import { useModelStore } from '@/stores/modelStore'
-import ModelSelector from '@/components/ModelSelector.vue'
-import DatasetSelector from '@/components/DatasetSelector.vue'
-import ResultChart from '@/components/ResultChart.vue'
-import AddModelDialog from '@/components/AddModelDialog.vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+
 import AddDatasetDialog from '@/components/AddDatasetDialog.vue'
-import type { Model, Dataset } from '@/types'
+import AddModelDialog from '@/components/AddModelDialog.vue'
+import DatasetSelector from '@/components/DatasetSelector.vue'
+import ModelSelector from '@/components/ModelSelector.vue'
+import ResultChart from '@/components/ResultChart.vue'
+import { useModelStore } from '@/stores/modelStore'
+import type { Dataset, Model } from '@/types'
 
 const modelStore = useModelStore()
 const {
@@ -115,6 +126,8 @@ const {
   selectedDataset,
   availableModels,
   availableDatasets,
+  error,
+  isLoading,
 } = storeToRefs(modelStore)
 
 const hasResults = computed(() => currentResult.value !== null)
@@ -127,8 +140,16 @@ const handleResize = () => {
   windowWidth.value = window.innerWidth
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize)
+
+  // 初始化：获取模型和数据集列表
+  try {
+    await modelStore.initialize()
+  } catch (error) {
+    ElMessage.error('初始化失败，请刷新页面重试')
+    console.error('Failed to initialize:', error)
+  }
 })
 
 onUnmounted(() => {
@@ -138,6 +159,7 @@ onUnmounted(() => {
 const handleRunComparison = async () => {
   const modelNames = selectedModels.value
     .map((id: string) => availableModels.value.find((m: Model) => m.id === id)?.name)
+    .filter(Boolean)
     .join(', ')
   const datasetName = availableDatasets.value.find(
     (d: Dataset) => d.id === selectedDataset.value
@@ -145,9 +167,13 @@ const handleRunComparison = async () => {
 
   ElMessage.info(`开始运行 ${modelNames} 在 ${datasetName} 数据集上的对比...`)
 
-  await modelStore.runComparison()
-
-  ElMessage.success('对比完成！')
+  try {
+    await modelStore.runComparison()
+    ElMessage.success('对比完成！')
+  } catch (error) {
+    // 错误已经在store中处理，这里不需要额外处理
+    console.error('Comparison failed:', error)
+  }
 }
 
 const handleClearResults = () => {

@@ -194,29 +194,27 @@ A: 导出功能在运行对比后自动出现在结果图的右上角：
 
 ### Q: 如何连接真实的后端 API？
 
-A:
+A: 已实现！系统现在通过以下API端点获取数据：
 
-1. 创建 `src/api/` 目录
-2. 安装 axios: `pnpm add axios`
-3. 创建 API 客户端
-4. 在 `runComparison` 中调用真实 API
+- `GET /api/v1/models` - 获取支持的模型列表
+- `GET /api/v1/datasets` - 获取支持的数据集列表
+- `POST /api/v1/analyze` - 运行模型分析对比
 
-示例：
+API集成特点：
+
+1. **自动初始化**：应用启动时自动获取模型和数据集列表
+2. **错误处理**：网络错误和API错误都有友好的提示
+3. **加载状态**：显示数据加载进度
+4. **类型安全**：完整的TypeScript类型定义
+
+API配置：
 
 ```typescript
-// src/api/client.ts
-import axios from 'axios'
-
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
-})
-
-// src/api/models.ts
-export const runModelComparison = async (models: string[], dataset: string) => {
-  const response = await api.post('/run-comparison', { models, dataset })
-  return response.data
-}
+// 环境变量配置
+VITE_API_BASE_URL=http://localhost:8000
 ```
+
+如果API不可用，系统会显示错误提示，用户可以继续使用（但需要刷新页面重试）。
 
 ## 开发技巧
 

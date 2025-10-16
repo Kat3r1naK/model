@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+
+import { getSupportedDatasets, getSupportedModels, runModelAnalysis } from '@/api/models'
 import type {
-  Model,
-  Dataset,
+  ApiAnalysisResponse,
   ComparisonResult,
-  ModelResult,
   DataPoint,
+  Dataset,
+  Model,
   ModelParameterValues,
+  ModelResult,
 } from '@/types'
 
 export const useModelStore = defineStore('model', () => {
@@ -180,6 +183,12 @@ export const useModelStore = defineStore('model', () => {
   // 是否正在运行
   const isRunning = ref(false)
 
+  // 是否正在加载数据
+  const isLoading = ref(false)
+
+  // 错误信息
+  const error = ref<string | null>(null)
+
   // 弹窗状态
   const showAddModelDialog = ref(false)
   const showAddDatasetDialog = ref(false)
@@ -229,46 +238,102 @@ export const useModelStore = defineStore('model', () => {
     return selectedModels.value.length > 0 && selectedDataset.value !== ''
   })
 
-  // 模拟模型运行，生成数据
-  const generateModelData = (modelId: string, steps = 60): DataPoint[] => {
-    const data: DataPoint[] = []
+  // 从API获取模型列表
+  const fetchModels = async () => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const apiModels = await getSupportedModels()
 
-    if (!modelId) return data
+      // 将API模型转换为前端模型格式
+      const models: Model[] = apiModels.map((apiModel, index) => ({
+        id: apiModel.id,
+        name: apiModel.id.toUpperCase(),
+        fullName: apiModel.name,
+        description: apiModel.description,
+        color: getModelColor(index),
+        parameters: getDefaultModelParameters(),
+      }))
 
-    // 确保模型参数已初始化
-    if (!modelParameters.value[modelId]) {
-      initializeModelParameters(modelId)
+      availableModels.value = models
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '获取模型列表失败'
+      console.error('Failed to fetch models:', err)
+    } finally {
+      isLoading.value = false
     }
+  }
 
-    // 从参数中获取值
-    const baseAccuracy = getModelParameter(modelId, 'initialKnowledge')
-    const learningRate = getModelParameter(modelId, 'learningRate')
-    const noise = getModelParameter(modelId, 'noise')
+  // 从API获取数据集列表
+  const fetchDatasets = async () => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const apiDatasets = await getSupportedDatasets()
 
-    for (let i = 0; i < steps; i++) {
-      // 使用 sigmoid 曲线模拟学习过程
-      const progress = i / steps
-      const sigmoid = 1 / (1 + Math.exp(-10 * (progress - 0.5)))
-      const trend = baseAccuracy + sigmoid * learningRate
+      // 将API数据集转换为前端数据集格式
+      const datasets: Dataset[] = apiDatasets.map((apiDataset) => ({
+        id: apiDataset.id,
+        name: apiDataset.name,
+        description: apiDataset.description,
+        fullDescription: `数据集路径: ${apiDataset.full_path}`,
+        source: 'API',
+        sampleCount: 0, // API没有返回这个信息
+        features: [],
+        domain: '教育数据',
+        year: new Date().getFullYear(),
+      }))
 
-      // 添加随机噪声
-      const randomNoise = (Math.random() - 0.5) * noise * 2
-
-      // 添加一些周期性波动
-      const wave = Math.sin(i / 5) * 0.01
-
-      let accuracy = trend + randomNoise + wave
-
-      // 确保准确率在合理范围内
-      accuracy = Math.max(0.4, Math.min(0.95, accuracy))
-
-      data.push({
-        step: i + 1,
-        accuracy: Number(accuracy.toFixed(4)),
-      })
+      availableDatasets.value = datasets
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '获取数据集列表失败'
+      console.error('Failed to fetch datasets:', err)
+    } finally {
+      isLoading.value = false
     }
+  }
 
-    return data
+  // 获取模型颜色
+  const getModelColor = (index: number): string => {
+    const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+    return colors[index % colors.length]
+  }
+
+  // 获取默认模型参数
+  const getDefaultModelParameters = () => {
+    // 为不同的模型提供不同的默认参数
+    const baseParameters = [
+      {
+        key: 'initialKnowledge',
+        label: '初始知识水平',
+        min: 0.3,
+        max: 0.7,
+        step: 0.05,
+        default: 0.48,
+        description: '学习者的初始知识掌握程度',
+      },
+      {
+        key: 'learningRate',
+        label: '学习率',
+        min: 0.05,
+        max: 0.5,
+        step: 0.05,
+        default: 0.35,
+        description: '学习新知识的速度',
+      },
+      {
+        key: 'noise',
+        label: '噪声水平',
+        min: 0.01,
+        max: 0.08,
+        step: 0.005,
+        default: 0.035,
+        description: '数据的随机波动程度',
+      },
+    ]
+
+    // 可以根据模型ID调整默认参数
+    return baseParameters
   }
 
   // 运行模型对比
@@ -276,45 +341,67 @@ export const useModelStore = defineStore('model', () => {
     if (!canRun.value) return
 
     isRunning.value = true
+    error.value = null
 
-    // 模拟异步运行
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // 调用API进行模型分析
+      const apiResponse: ApiAnalysisResponse = await runModelAnalysis(
+        selectedModels.value,
+        selectedDataset.value
+      )
 
-    const results: ModelResult[] = []
+      // 转换API响应为前端格式
+      const results: ModelResult[] = []
 
-    for (const modelId of selectedModels.value) {
-      const model = availableModels.value.find((m: Model) => m.id === modelId)
-      const dataset = availableDatasets.value.find((d: Dataset) => d.id === selectedDataset.value)
+      for (const modelId of selectedModels.value) {
+        const model = availableModels.value.find((m) => m.id === modelId)
+        const dataset = availableDatasets.value.find((d) => d.id === selectedDataset.value)
+        const apiResult = apiResponse.results[modelId]
 
-      if (model && dataset) {
-        results.push({
-          modelId: model.id,
-          modelName: model.name,
-          datasetId: dataset.id,
-          datasetName: dataset.name,
-          data: generateModelData(model.id),
-          color: model.color,
-        })
+        if (model && dataset && apiResult) {
+          // 将API的steps和accuracy转换为DataPoint数组
+          const data: DataPoint[] = apiResult.steps.map((step, index) => ({
+            step: step,
+            accuracy: apiResult.accuracy[index] || 0,
+          }))
+
+          results.push({
+            modelId: model.id,
+            modelName: model.name,
+            datasetId: dataset.id,
+            datasetName: dataset.name,
+            data: data,
+            color: model.color,
+          })
+        }
       }
+
+      const result: ComparisonResult = {
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        models: selectedModels.value,
+        dataset: selectedDataset.value,
+        results,
+      }
+
+      currentResult.value = result
+      comparisonResults.value.unshift(result)
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : '模型分析失败'
+      console.error('Failed to run comparison:', err)
+    } finally {
+      isRunning.value = false
     }
-
-    const result: ComparisonResult = {
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-      models: selectedModels.value,
-      dataset: selectedDataset.value,
-      results,
-    }
-
-    currentResult.value = result
-    comparisonResults.value.unshift(result)
-
-    isRunning.value = false
   }
 
   // 清空结果
   const clearResults = () => {
     currentResult.value = null
+  }
+
+  // 初始化：获取模型和数据集列表
+  const initialize = async () => {
+    await Promise.all([fetchModels(), fetchDatasets()])
   }
 
   // 重置所有选择
@@ -381,6 +468,8 @@ export const useModelStore = defineStore('model', () => {
     comparisonResults,
     currentResult,
     isRunning,
+    isLoading,
+    error,
     showAddModelDialog,
     showAddDatasetDialog,
 
@@ -388,7 +477,10 @@ export const useModelStore = defineStore('model', () => {
     canRun,
 
     // 方法
+    initialize,
     runComparison,
+    fetchModels,
+    fetchDatasets,
     clearResults,
     resetSelections,
     initializeModelParameters,
